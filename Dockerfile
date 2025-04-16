@@ -15,6 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Create public directory if it doesn't exist
+RUN mkdir -p ./public
+
 # Set production environment variables
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -32,14 +35,10 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Create public directory if it doesn't exist
-RUN mkdir -p ./public
-
-# Only copy public directory if it exists in the builder
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public 2>/dev/null || :
+# Create required directories
+RUN mkdir -p public .next
 
 # Set the correct permission for prerender cache
-RUN mkdir -p .next
 RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
