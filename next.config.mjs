@@ -8,6 +8,8 @@ const nextConfig = {
   experimental: {
     // Add any other experimental features as needed
   },
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
 };
 
 export default nextConfig;
