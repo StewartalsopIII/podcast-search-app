@@ -2,36 +2,18 @@ version: '3.8'
 
 services:
   app:
+    container_name: podcast-search-app
     build:
       context: .
       dockerfile: Dockerfile
+    image: podcast-search-app:latest
     ports:
-      - "3000:3000"
+      - "3003:3000"
+    env_file:
+      - .env
     environment:
-      # Authentication
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-      
-      # OAuth Providers
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      
-      # Embedding Providers Configuration
-      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-openai}
-      - EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION:-1536}
-      
-      # OpenAI API Configuration
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      
-      # BGE API Configuration
-      - BGE_API_ENDPOINT_URL=${BGE_API_ENDPOINT_URL}
-      - BGE_API_TOKEN=${BGE_API_TOKEN}
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SITE_URL=https://search.getcrazywisdom.com
     restart: unless-stopped
-    # Memory and CPU limits
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1'
+    # Memory limits using older syntax for compatibility
+    mem_limit: 1G
