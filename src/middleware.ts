@@ -1,6 +1,7 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getBaseUrl } from '@/lib/utils';
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -32,10 +33,8 @@ export async function middleware(req: NextRequest) {
   const hasAuthCode = req.nextUrl.searchParams.has('code');
   const isAppRoute = !isAuthRoute && !isCallbackRoute && !(req.nextUrl.pathname === '/' && hasAuthCode);
   
-  // Get the correct origin based on the incoming request
-  const origin = req.headers.get('host') || 'search.getcrazywisdom.com';
-  const protocol = req.headers.get('x-forwarded-proto') || 'https';
-  const baseUrl = `${protocol}://${origin}`;
+  // Use the utility function to get the correct base URL
+  const baseUrl = getBaseUrl(req);
   
   // Redirect if conditions are not met
   if (isAppRoute && !session) {

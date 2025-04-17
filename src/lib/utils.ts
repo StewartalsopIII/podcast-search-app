@@ -5,6 +5,36 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Helper function to get proper base URL for redirects, both in client and server contexts
+export function getBaseUrl(req?: Request): string {
+  // For server-side (middleware, API routes)
+  if (req) {
+    // Try to get from X-Forwarded headers (set by Nginx)
+    const forwardedHost = req.headers.get('x-forwarded-host');
+    const forwardedProto = req.headers.get('x-forwarded-proto');
+    
+    if (forwardedHost && forwardedProto) {
+      return `${forwardedProto}://${forwardedHost}`;
+    }
+    
+    // Fall back to host header
+    const host = req.headers.get('host');
+    if (host) {
+      // Assume HTTPS in production
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      return `${protocol}://${host}`;
+    }
+  }
+  
+  // For client-side or when headers aren't available
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+  
+  // Last resort fallback - should be configured in ENV properly
+  return 'https://search.getcrazywisdom.com';
+}
+
 // Utility to format timestamp (seconds) to MM:SS format
 export function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
