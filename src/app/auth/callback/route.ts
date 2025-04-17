@@ -7,8 +7,13 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code');
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies });
-    await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const supabase = createRouteHandlerClient({ cookies });
+      await supabase.auth.exchangeCodeForSession(code);
+      console.log('Successfully exchanged code for session at /auth/callback');
+    } catch (error) {
+      console.error('Error exchanging code for session:', error);
+    }
   }
 
   // URL to redirect to after sign in process completes

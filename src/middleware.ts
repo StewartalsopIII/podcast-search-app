@@ -6,6 +6,19 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
 
+  // Process the verification code if present (handles root path verification links)
+  const code = req.nextUrl.searchParams.get('code');
+  if (code && req.nextUrl.pathname === '/') {
+    try {
+      await supabase.auth.exchangeCodeForSession(code);
+      // Successfully exchanged code for session, let the request continue
+      return res;
+    } catch (error) {
+      console.error('Error exchanging code for session:', error);
+      // Continue with regular middleware flow
+    }
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -13,13 +26,11 @@ export async function middleware(req: NextRequest) {
   // Check auth condition
   const isAuthRoute = req.nextUrl.pathname.startsWith('/auth');
   const isApiRoute = req.nextUrl.pathname.startsWith('/api');
+  const isCallbackRoute = req.nextUrl.pathname.startsWith('/callback');
   
-  // Check if this is a callback with auth code (either at /auth/callback or root path)
+  // Skip auth check for callback routes or routes with verification code
   const hasAuthCode = req.nextUrl.searchParams.has('code');
-  const isCallbackRoute = req.nextUrl.pathname.startsWith('/callback') || 
-                         (req.nextUrl.pathname === '/' && hasAuthCode);
-  
-  const isAppRoute = !isAuthRoute && !isCallbackRoute;
+  const isAppRoute = !isAuthRoute && !isCallbackRoute && !(req.nextUrl.pathname === '/' && hasAuthCode);
   
   // Redirect if conditions are not met
   if (isAppRoute && !session) {
