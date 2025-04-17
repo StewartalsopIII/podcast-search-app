@@ -16,7 +16,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Use NEXT_PUBLIC_SITE_URL for the redirect if available, fallback to origin
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://search.getcrazywisdom.com';
-  return NextResponse.redirect(new URL('/', siteUrl));
+  // Use the original request's URL as the base for the redirect
+  return NextResponse.redirect(new URL('/', requestUrl.origin));
 }
