@@ -13,7 +13,13 @@ export async function middleware(req: NextRequest) {
   // Check auth condition
   const isAuthRoute = req.nextUrl.pathname.startsWith('/auth');
   const isApiRoute = req.nextUrl.pathname.startsWith('/api');
-  const isAppRoute = !isAuthRoute && !req.nextUrl.pathname.startsWith('/callback');
+  
+  // Check if this is a callback with auth code (either at /auth/callback or root path)
+  const hasAuthCode = req.nextUrl.searchParams.has('code');
+  const isCallbackRoute = req.nextUrl.pathname.startsWith('/callback') || 
+                         (req.nextUrl.pathname === '/' && hasAuthCode);
+  
+  const isAppRoute = !isAuthRoute && !isCallbackRoute;
   
   // Redirect if conditions are not met
   if (isAppRoute && !session) {
