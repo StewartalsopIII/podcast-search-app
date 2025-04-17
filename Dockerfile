@@ -54,7 +54,8 @@ EXPOSE 3000
 
 ENV PORT 3000
 
-# Set hostname to localhost
+# Set hostname for binding but use site URL for redirects
 ENV HOSTNAME "0.0.0.0"
+ENV NEXT_PUBLIC_SITE_URL "https://search.getcrazywisdom.com"
 
 CMD ["node", "server.js"]

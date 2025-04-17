@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/', requestUrl.origin));
+  // Use NEXT_PUBLIC_SITE_URL for the redirect if available, fallback to origin
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://search.getcrazywisdom.com';
+  return NextResponse.redirect(new URL('/', siteUrl));
 }

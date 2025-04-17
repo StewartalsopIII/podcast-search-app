@@ -1,15 +1,31 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Configure redirects or rewrites as needed for auth flows
-  // redirects: async () => { ... },
-  // Add any customizations for server-side processing
-  // Remove serverActions flag as it's now enabled by default in Next.js 14.2.x
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
+  
+  // Prevent 0.0.0.0 from appearing in URLs
+  assetPrefix: process.env.NEXT_PUBLIC_SITE_URL || 'https://search.getcrazywisdom.com',
+  
+  // Configure URL handling
   experimental: {
     // Add any other experimental features as needed
   },
-  // Enable standalone output for Docker deployment
-  output: 'standalone',
+  
+  // Set custom headers to ensure proper redirects
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Forwarded-Host',
+            value: 'search.getcrazywisdom.com',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;

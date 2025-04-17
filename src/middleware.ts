@@ -32,15 +32,18 @@ export async function middleware(req: NextRequest) {
   const hasAuthCode = req.nextUrl.searchParams.has('code');
   const isAppRoute = !isAuthRoute && !isCallbackRoute && !(req.nextUrl.pathname === '/' && hasAuthCode);
   
+  // Get the site URL from environment or use a default
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://search.getcrazywisdom.com';
+  
   // Redirect if conditions are not met
   if (isAppRoute && !session) {
     // Redirect unauthenticated users to login page
-    return NextResponse.redirect(new URL('/auth/login', req.url));
+    return NextResponse.redirect(`${siteUrl}/auth/login`);
   }
 
   if (isAuthRoute && session) {
     // Redirect authenticated users to app home
-    return NextResponse.redirect(new URL('/', req.url));
+    return NextResponse.redirect(siteUrl);
   }
 
   // API routes need authentication
