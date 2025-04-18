@@ -74,16 +74,9 @@ function chunkContent(
   return chunks;
 }
 
-// Configure with higher timeout to avoid 504 Gateway Timeout
-export const config = {
-  api: {
-    responseLimit: false,
-    bodyParser: {
-      sizeLimit: '10mb'
-    },
-  },
-  // Next.js doesn't directly support setting an API timeout, but we'll log duration info
-};
+// Next.js App Router route configuration
+export const maxDuration = 600; // 10 minute timeout (in seconds)
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   const startTime = Date.now();
