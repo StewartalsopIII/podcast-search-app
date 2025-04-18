@@ -9,12 +9,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Update server: `git pull && docker-compose down && docker-compose up -d --build`
 
 ## Server Configuration
-- Ubuntu droplet running Nginx as reverse proxy
+- Ubuntu droplet (1vcpu-1gb-nyc1-01) running Nginx as reverse proxy
+- DigitalOcean hosting in NYC1 region with 1 CPU, 1GB RAM
 - Main container runs on port 3003, mapped from Docker container port 3000
-- Docker container name: `podcast-search-app`
 - Server address: `https://search.getcrazywisdom.com`
 - Nginx configuration in `/etc/nginx/sites-enabled/search.getcrazywisdom.com`
 - Let's Encrypt SSL certificates for HTTPS
+- Server also hosts other sites: getcrazywisdom.com (port 3000) and aiwhisperers.org (port 3001)
+- Application running on Node.js in containerized environment
+- Docker is managed from host, not available inside container
 
 ## Environment Variables
 - `NEXT_PUBLIC_SITE_URL`: Must be set to `https://search.getcrazywisdom.com`
@@ -30,6 +33,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Debug Tools
 - `/api/debug/server` - Shows OS and server info
-- `/api/debug/docker` - Shows Docker container configuration
 - `/api/debug/nginx` - Shows Nginx configuration
 - `/api/debug/auth` - Tests authentication redirects
+- Note: Docker debug information is not available from within the container
+
+## Known Issues & Solutions
+- The debug endpoints show `0.0.0.0:3000` in URLs when accessed directly
+  - Solution: Use `getBaseUrl()` utility for URL generation with request context
+- Docker Compose may fail with "ContainerConfig" error on deployment
+  - Solution: Use simplified docker-compose.yml or deploy directly with docker run
+- System has limited resources (1GB RAM) - monitor for performance issues
+  - `NODE_OPTIONS="--max-old-space-size=512"` limits memory usage
+- Authentication 404 errors at paths like `/auth/verify-email`
+  - Solution: Added specific route handler for verify-email and catch-all auth handler
+- Authentication verification links may display as literal templates (`{{ .ConfirmationURL }}`)
+  - Supabase free tier templating issues are handled via flexible route matching
+- Multiple sites on same server - be careful with port assignments
+  - Port 3000: Main site, Port 3001: AIWhisperers, Port 3003: Podcast Search
