@@ -39,34 +39,79 @@ export function TranscriptUploadForm() {
     try {
       const file = data.transcriptFile[0];
       
+      // File size check
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        throw new Error('File too large. Maximum size is 10MB.');
+      }
+      
       // Read the file content
       const fileContent = await readFileAsText(file);
       
-      // Upload to API
-      const response = await fetch('/api/embed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          episode_id: data.episodeId,
-          content: fileContent,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload transcript');
-      }
-
-      const result = await response.json();
-      setProgress(100);
+      // Set up timeout and abort controller
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortController.abort();
+      }, 120000); // 2 minute timeout
       
-      // Redirect to transcript view or search page
-      setTimeout(() => {
-        router.push('/');
-        router.refresh();
-      }, 1000);
+      try {
+        // Show progress indication
+        const progressInterval = setInterval(() => {
+          // Slowly increase progress up to 95% during processing
+          setProgress(prev => {
+            if (prev === null) return 5;
+            return Math.min(prev + 1, 95);
+          });
+        }, 1000);
+        
+        // Upload to API with timeout
+        const response = await fetch('/api/embed', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            episode_id: data.episodeId,
+            content: fileContent,
+            chunk_size: 1000,  // Set reasonable defaults
+            chunk_overlap: 200
+          }),
+          signal: abortController.signal
+        });
+        
+        clearInterval(progressInterval);
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          // Try to parse error response
+          let errorMsg = 'Failed to upload transcript';
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+          } catch (e) {
+            // If we can't parse JSON, use response status text
+            errorMsg = `Server error (${response.status}): ${response.statusText}`;
+          }
+          throw new Error(errorMsg);
+        }
+
+        const result = await response.json();
+        setProgress(100);
+        
+        // Redirect to transcript view or search page
+        setTimeout(() => {
+          router.push('/');
+          router.refresh();
+        }, 1000);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        
+        // Handle abort/timeout specifically
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timed out. The server is taking too long to process your transcript. Try a smaller file or try again later.');
+        }
+        
+        throw fetchError;
+      }
     } catch (error: any) {
       setError(error.message || 'Failed to upload transcript');
       setProgress(null);
